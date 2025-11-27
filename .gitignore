@@ -33,5 +33,5 @@ build/
 .vscode/
 
 ### Las claves secretas xd ###
-.env
-.env.local
+/.env
+/.env.local
