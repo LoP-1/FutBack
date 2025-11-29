@@ -12,6 +12,7 @@ import quantum.futback.config.security.JwtToken.JwtTokenProvider;
 import quantum.futback.config.security.JwtToken.UserPrincipal;
 import quantum.futback.entity.DTO.JwtResponse;
 import quantum.futback.entity.DTO.LoginRequest;
+import quantum.futback.entity.DTO.RefreshTokenRequest;
 import quantum.futback.entity.RefreshToken;
 import quantum.futback.entity.User;
 import quantum.futback.services.UserService;
@@ -67,7 +68,7 @@ public class AuthController {
 
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestBody RefreshToken refreshTokenRequest) {
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
         String requestRefreshToken = refreshTokenRequest.getToken();
 
         // Buscar y validar el refresh token en la BD
@@ -104,7 +105,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Transactional
-    public ResponseEntity<?> logoutUser(@RequestBody RefreshToken refreshTokenRequest) {
+    public ResponseEntity<?> logoutUser(@RequestBody RefreshTokenRequest refreshTokenRequest) {
         Optional<RefreshToken> refreshTokenOpt = tokenProvider.findByRefreshToken(refreshTokenRequest.getToken());
 
         if (refreshTokenOpt.isPresent()) {
