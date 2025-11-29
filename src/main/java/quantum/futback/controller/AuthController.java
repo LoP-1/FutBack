@@ -109,7 +109,7 @@ public class AuthController {
         Optional<RefreshToken> refreshTokenOpt = tokenProvider.findByRefreshToken(refreshTokenRequest.getToken());
 
         if (refreshTokenOpt.isPresent()) {
-            tokenProvider.refreshTokenRepository.delete(refreshTokenOpt.get());
+            tokenProvider.deleteRefreshToken(refreshTokenOpt.get());
             return ResponseEntity.ok("Logout exitoso. Token invalidado.");
         } else {
             return ResponseEntity.badRequest().body("Token ya invalidado o no encontrado.");

@@ -111,8 +111,16 @@ public class JwtTokenProvider {
         return refreshTokenOpt;
     }
 
+    /**
+     * Elimina un refresh token de la BD (para logout).
+     */
+    @Transactional
+    public void deleteRefreshToken(RefreshToken refreshToken) {
+        refreshTokenRepository.delete(refreshToken);
+    }
+
     // Inyección del Repositorio
-    public final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public JwtTokenProvider(RefreshTokenRepository refreshTokenRepository) {
         this.refreshTokenRepository = refreshTokenRepository;
