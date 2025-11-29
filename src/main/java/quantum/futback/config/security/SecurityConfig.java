@@ -28,10 +28,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CSRF protection is disabled because this is a stateless REST API using JWT tokens.
-                // JWT tokens are transmitted via Authorization header, not cookies, so CSRF attacks are not applicable.
-                // CSRF attacks rely on browsers automatically sending cookies, which doesn't apply to Bearer token authentication.
-                .csrf(csrf -> csrf.disable())
+                // en resumen copilot quito el csrf porque estamos usando tokens
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/**").permitAll()

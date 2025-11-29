@@ -14,7 +14,6 @@ import quantum.futback.entity.DTO.JwtResponse;
 import quantum.futback.entity.DTO.LoginRequest;
 import quantum.futback.entity.RefreshToken;
 import quantum.futback.entity.User;
-import quantum.futback.repository.RefreshTokenRepository;
 import quantum.futback.services.UserService;
 
 import java.util.Optional;
