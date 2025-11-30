@@ -1,22 +1,28 @@
 package quantum.futback.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+import quantum.futback.core.multitenancy.TenantAware;
+
 import java.util.UUID;
 
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = Long.class))
 @Entity
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"tenant_id", "dni"}), // DNI único por Tenant
-        @UniqueConstraint(columnNames = {"tenant_id", "email"}) // Email único por Tenant
+        @UniqueConstraint(columnNames = {"tenant_id", "dni"}),
+        @UniqueConstraint(columnNames = {"tenant_id", "email"})
 })
-public class User {
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
+public class User implements TenantAware { // <-- Implementa TenantAware
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private Long tenantId; // <-- Campo para el ID del Tenant
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
@@ -43,9 +49,9 @@ public class User {
     public User() {
     }
 
-    public User(UUID id, Tenant tenant, Role role, String dni, String email, String passwordHash, String fullName, String phone, Boolean isActive) {
+    public User(UUID id, Long tenantId, Role role, String dni, String email, String passwordHash, String fullName, String phone, Boolean isActive) {
         this.id = id;
-        this.tenant = tenant;
+        this.tenantId = tenantId;
         this.role = role;
         this.dni = dni;
         this.email = email;
@@ -63,13 +69,16 @@ public class User {
         this.id = id;
     }
 
-    public Tenant getTenant() {
-        return tenant;
+    @Override
+    public Long getTenantId() {
+        return tenantId;
     }
 
-    public void setTenant(Tenant tenant) {
-        this.tenant = tenant;
+    @Override
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
+
 
     public Role getRole() {
         return role;

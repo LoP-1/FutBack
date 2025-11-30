@@ -1,4 +1,4 @@
-package quantum.futback.services;
+package quantum.futback.services.interfaces;
 import org.springframework.security.core.Authentication;
 import quantum.futback.entity.User;
 

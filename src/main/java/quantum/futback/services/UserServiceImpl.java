@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import quantum.futback.config.security.JwtToken.UserPrincipal;
 import quantum.futback.entity.User;
 import quantum.futback.repository.UserRepository;
+import quantum.futback.services.interfaces.UserService;
 
 import java.util.Optional;
 import java.util.UUID;

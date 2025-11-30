@@ -1,30 +1,30 @@
 package quantum.futback.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+import quantum.futback.core.multitenancy.TenantAware;
+
 import java.util.UUID;
 
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = Long.class))
 @Entity
 @Table(name = "roles", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"tenant_id", "name"})
 })
-public class Role {
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
+public class Role implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private Long tenantId;
 
     @Column(name = "name", length = 50, nullable = false)
     private String name;
-
-    public Role(UUID id, Tenant tenant, String name) {
-        this.id = id;
-        this.tenant = tenant;
-        this.name = name;
-    }
 
     public Role() {
     }
@@ -37,12 +37,14 @@ public class Role {
         this.id = id;
     }
 
-    public Tenant getTenant() {
-        return tenant;
+    @Override
+    public Long getTenantId() {
+        return tenantId;
     }
 
-    public void setTenant(Tenant tenant) {
-        this.tenant = tenant;
+    @Override
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getName() {

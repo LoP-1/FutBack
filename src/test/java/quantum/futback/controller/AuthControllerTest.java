@@ -1,6 +1,7 @@
 package quantum.futback.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import quantum.futback.core.multitenancy.TenantContext; // <-- Importante
 import quantum.futback.entity.DTO.LoginRequest;
 import quantum.futback.entity.Role;
 import quantum.futback.entity.Tenant;
@@ -49,6 +51,10 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
+        // 1. Simular un Tenant ID en el contexto para que el Interceptor no falle
+        // Usamos 1L como ID de ejemplo
+        TenantContext.setTenantId(1L);
+
         // Create test tenant
         testTenant = new Tenant();
         testTenant.setName("Test Tenant");
@@ -57,13 +63,15 @@ class AuthControllerTest {
 
         // Create test role
         testRole = new Role();
-        testRole.setTenant(testTenant);
+        // CORREGIDO: Usamos setTenantId en lugar de setTenant
+        testRole.setTenantId(1L);
         testRole.setName("ROLE_USER");
         entityManager.persist(testRole);
 
         // Create test user
         testUser = new User();
-        testUser.setTenant(testTenant);
+        // CORREGIDO: Usamos setTenantId en lugar de setTenant
+        testUser.setTenantId(1L);
         testUser.setRole(testRole);
         testUser.setDni("12345678");
         testUser.setEmail("test@example.com");
@@ -73,6 +81,12 @@ class AuthControllerTest {
         entityManager.persist(testUser);
 
         entityManager.flush();
+    }
+
+    // Limpiamos el contexto después de cada test para no afectar a otros
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test
@@ -185,7 +199,8 @@ class AuthControllerTest {
         String accessToken = objectMapper.readTree(responseContent).get("accessToken").asText();
 
         // Access a public endpoint with token (should work)
-        mockMvc.perform(get("/esta-rico")
+        // Nota: Asegúrate de que este endpoint exista o usa uno real como /api/tenants/current
+        mockMvc.perform(get("/api/tenants/current")
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk());
     }

@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import quantum.futback.core.multitenancy.TenantContext;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -30,11 +31,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
         try {
             String jwt = getJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+
                 UUID userId = tokenProvider.getUserIdFromJWT(jwt);
+                Long tenantId = tokenProvider.getTenantIdFromJWT(jwt);
+
+                TenantContext.setTenantId(tenantId);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(userId.toString());
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -44,10 +50,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex);
+            logger.error("Could not set user authentication or tenant context in security context", ex);
         }
 
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {

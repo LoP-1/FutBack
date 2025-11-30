@@ -1,5 +1,6 @@
 package quantum.futback.config.security.JwtToken;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,19 +12,23 @@ import java.util.List;
 import java.util.UUID;
 
 public class UserPrincipal implements UserDetails {
+
     private UUID id;
+    private Long tenantId;
     private String email;
-    private String password;
-    private UUID tenantId;
     private String roleName;
+
+    @JsonIgnore
+    private String password;
+
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserPrincipal(UUID id, String email, String password, UUID tenantId, String roleName, Collection<? extends GrantedAuthority> authorities) {
+    public UserPrincipal(UUID id, Long tenantId, String email, String roleName, String password, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
-        this.email = email;
-        this.password = password;
         this.tenantId = tenantId;
+        this.email = email;
         this.roleName = roleName;
+        this.password = password;
         this.authorities = authorities;
     }
 
@@ -34,10 +39,10 @@ public class UserPrincipal implements UserDetails {
 
         return new UserPrincipal(
                 user.getId(),
+                user.getTenantId(), // <-- AQUÍ ESTABA EL ERROR: Usamos getTenantId() directo
                 user.getEmail(),
-                user.getPasswordHash(),
-                user.getTenant().getId(),
                 user.getRole().getName(),
+                user.getPasswordHash(),
                 authorities
         );
     }
@@ -46,7 +51,7 @@ public class UserPrincipal implements UserDetails {
         return id;
     }
 
-    public UUID getTenantId() {
+    public Long getTenantId() {
         return tenantId;
     }
 
@@ -54,10 +59,9 @@ public class UserPrincipal implements UserDetails {
         return roleName;
     }
 
-    // Métodos de UserDetails
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+    public String getUsername() {
+        return email;
     }
 
     @Override
@@ -66,8 +70,8 @@ public class UserPrincipal implements UserDetails {
     }
 
     @Override
-    public String getUsername() {
-        return email;
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
     }
 
     @Override

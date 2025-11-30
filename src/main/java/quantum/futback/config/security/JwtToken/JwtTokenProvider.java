@@ -125,4 +125,14 @@ public class JwtTokenProvider {
     public JwtTokenProvider(RefreshTokenRepository refreshTokenRepository) {
         this.refreshTokenRepository = refreshTokenRepository;
     }
+
+
+    public Long getTenantIdFromJWT(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("tenantId", Long.class);
+    }
 }
