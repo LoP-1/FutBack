@@ -9,7 +9,7 @@ public class QueRico {
 
     @GetMapping("/esta-rico")
     public String estaRico() {
-        return "si que rico :D ahora modificado";
+        return "si que rico :D ahora modificado - version 2";
     }
 
 }
