@@ -1,0 +1,12 @@
+POST http://localhost:7070/api/internal/tenants/admin-setup
+accept: */*
+Content-Type: application/json
+
+{
+  "academyName": "Test",
+  "adminFullName": "Prueba Admin ",
+  "adminEmail": "testeo@gmail.com",
+  "adminDni": "123123",
+  "adminPassword": "123",
+  "adminPhone": "123"
+}

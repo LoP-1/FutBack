@@ -12,7 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
-import quantum.futback.core.multitenancy.TenantContext; // <-- Importante
+import quantum.futback.core.multitenancy.TenantContext;
 import quantum.futback.entity.DTO.LoginRequest;
 import quantum.futback.entity.Role;
 import quantum.futback.entity.Tenant;
@@ -20,6 +20,7 @@ import quantum.futback.entity.User;
 import quantum.futback.repository.UserRepository;
 
 import jakarta.persistence.EntityManager;
+import java.util.UUID; // <--- ¡Importación necesaria!
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -49,11 +50,12 @@ class AuthControllerTest {
     private Tenant testTenant;
     private Role testRole;
 
+    private static final UUID TEST_TENANT_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
     @BeforeEach
     void setUp() {
-        // 1. Simular un Tenant ID en el contexto para que el Interceptor no falle
-        // Usamos 1L como ID de ejemplo
-        TenantContext.setTenantId(1L);
+        // 1. Simular un Tenant ID en el contexto usando UUID
+        TenantContext.setTenantId(TEST_TENANT_UUID);
 
         // Create test tenant
         testTenant = new Tenant();
@@ -61,17 +63,15 @@ class AuthControllerTest {
         testTenant.setActive(true);
         entityManager.persist(testTenant);
 
-        // Create test role
+        // Testear un rol
         testRole = new Role();
-        // CORREGIDO: Usamos setTenantId en lugar de setTenant
-        testRole.setTenantId(1L);
+        testRole.setTenantId(TEST_TENANT_UUID); // CORREGIDO a UUID
         testRole.setName("ROLE_USER");
         entityManager.persist(testRole);
 
-        // Create test user
+        // Testear al usuario
         testUser = new User();
-        // CORREGIDO: Usamos setTenantId en lugar de setTenant
-        testUser.setTenantId(1L);
+        testUser.setTenantId(TEST_TENANT_UUID); // CORREGIDO a UUID
         testUser.setRole(testRole);
         testUser.setDni("12345678");
         testUser.setEmail("test@example.com");
@@ -199,7 +199,6 @@ class AuthControllerTest {
         String accessToken = objectMapper.readTree(responseContent).get("accessToken").asText();
 
         // Access a public endpoint with token (should work)
-        // Nota: Asegúrate de que este endpoint exista o usa uno real como /api/tenants/current
         mockMvc.perform(get("/api/tenants/current")
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk());

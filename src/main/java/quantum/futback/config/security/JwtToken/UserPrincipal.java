@@ -14,7 +14,7 @@ import java.util.UUID;
 public class UserPrincipal implements UserDetails {
 
     private UUID id;
-    private Long tenantId;
+    private UUID tenantId;
     private String email;
     private String roleName;
 
@@ -23,7 +23,7 @@ public class UserPrincipal implements UserDetails {
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserPrincipal(UUID id, Long tenantId, String email, String roleName, String password, Collection<? extends GrantedAuthority> authorities) {
+    public UserPrincipal(UUID id, UUID tenantId, String email, String roleName, String password, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.tenantId = tenantId;
         this.email = email;
@@ -39,7 +39,7 @@ public class UserPrincipal implements UserDetails {
 
         return new UserPrincipal(
                 user.getId(),
-                user.getTenantId(), // <-- AQUÍ ESTABA EL ERROR: Usamos getTenantId() directo
+                user.getTenantId(), // Ya retorna UUID
                 user.getEmail(),
                 user.getRole().getName(),
                 user.getPasswordHash(),
@@ -51,7 +51,7 @@ public class UserPrincipal implements UserDetails {
         return id;
     }
 
-    public Long getTenantId() {
+    public UUID getTenantId() {
         return tenantId;
     }
 

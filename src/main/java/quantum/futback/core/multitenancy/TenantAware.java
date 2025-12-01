@@ -1,6 +1,8 @@
 package quantum.futback.core.multitenancy;
 
+import java.util.UUID;
+
 public interface TenantAware {
-    Long getTenantId();
-    void setTenantId(Long tenantId);
+    UUID getTenantId();
+    void setTenantId(UUID tenantId);
 }

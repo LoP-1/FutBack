@@ -38,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
 
                 UUID userId = tokenProvider.getUserIdFromJWT(jwt);
-                Long tenantId = tokenProvider.getTenantIdFromJWT(jwt);
+                UUID tenantId = tokenProvider.getTenantIdFromJWT(jwt);
 
                 TenantContext.setTenantId(tenantId);
 

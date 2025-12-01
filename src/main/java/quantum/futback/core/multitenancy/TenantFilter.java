@@ -6,8 +6,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 @Order(1)
@@ -21,7 +21,8 @@ public class TenantFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-        Long tenantId = TenantContext.getTenantId();
+        // CAMBIO: Usar UUID
+        UUID tenantId = TenantContext.getTenantId();
 
         if (tenantId != null) {
             Session session = entityManager.unwrap(Session.class);

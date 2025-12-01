@@ -1,6 +1,5 @@
 package quantum.futback.config.security.JwtToken;
 
-
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
@@ -40,7 +39,6 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
-        // JWT usa el ID del usuario como Subject, incluye Tenant ID y Role Name
         return Jwts.builder()
                 .setSubject(userPrincipal.getId().toString())
                 .claim("tenantId", userPrincipal.getTenantId().toString())
@@ -53,11 +51,9 @@ public class JwtTokenProvider {
 
     @Transactional
     public String generateAndSaveRefreshToken(User user) {
-        // Genera un token aleatorio, no JWT, para simplicidad y seguridad
         String token = UUID.randomUUID().toString();
         Instant expiryDate = Instant.now().plusMillis(jwtRefreshExpirationMs);
 
-        // Si ya existe un token para este usuario, lo eliminamos (permite un solo token activo)
         refreshTokenRepository.deleteByUser(user);
 
         RefreshToken refreshToken = new RefreshToken(user, token, expiryDate);
@@ -84,9 +80,6 @@ public class JwtTokenProvider {
         return false;
     }
 
-    /**
-     * Obtiene el ID de usuario del Access Token.
-     */
     public UUID getUserIdFromJWT(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -97,42 +90,40 @@ public class JwtTokenProvider {
         return UUID.fromString(claims.getSubject());
     }
 
-    /**
-     * Obtiene el Refresh Token de la BD y verifica su expiración.
-     */
     public Optional<RefreshToken> findByRefreshToken(String token) {
         Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByToken(token);
 
         if (refreshTokenOpt.isPresent() && refreshTokenOpt.get().getExpiryDate().isBefore(Instant.now())) {
-            // Token expirado, lo eliminamos de la BD para limpiar
             refreshTokenRepository.delete(refreshTokenOpt.get());
             return Optional.empty();
         }
         return refreshTokenOpt;
     }
 
-    /**
-     * Elimina un refresh token de la BD (para logout).
-     */
     @Transactional
     public void deleteRefreshToken(RefreshToken refreshToken) {
         refreshTokenRepository.delete(refreshToken);
     }
 
-    // Inyección del Repositorio
     private final RefreshTokenRepository refreshTokenRepository;
 
     public JwtTokenProvider(RefreshTokenRepository refreshTokenRepository) {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
-
-    public Long getTenantIdFromJWT(String token) {
+    public UUID getTenantIdFromJWT(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        return claims.get("tenantId", Long.class);
+
+        String tenantIdString = claims.get("tenantId", String.class);
+
+        if (tenantIdString == null) {
+            return null;
+        }
+
+        return UUID.fromString(tenantIdString);
     }
 }

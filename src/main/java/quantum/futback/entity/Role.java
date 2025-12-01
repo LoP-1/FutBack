@@ -8,7 +8,7 @@ import quantum.futback.core.multitenancy.TenantAware;
 
 import java.util.UUID;
 
-@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = Long.class))
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = UUID.class))
 @Entity
 @Table(name = "roles", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"tenant_id", "name"})
@@ -21,7 +21,7 @@ public class Role implements TenantAware {
     private UUID id;
 
     @Column(name = "tenant_id", nullable = false, updatable = false)
-    private Long tenantId;
+    private UUID tenantId;
 
     @Column(name = "name", length = 50, nullable = false)
     private String name;
@@ -38,12 +38,12 @@ public class Role implements TenantAware {
     }
 
     @Override
-    public Long getTenantId() {
+    public UUID getTenantId() {
         return tenantId;
     }
 
     @Override
-    public void setTenantId(Long tenantId) {
+    public void setTenantId(UUID tenantId) {
         this.tenantId = tenantId;
     }
 

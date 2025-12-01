@@ -3,6 +3,7 @@ package quantum.futback.core.multitenancy;
 import org.hibernate.Interceptor;
 import org.hibernate.type.Type;
 import org.springframework.stereotype.Component;
+import java.util.UUID;
 
 @Component
 public class TenantInterceptor implements Interceptor {
@@ -15,7 +16,7 @@ public class TenantInterceptor implements Interceptor {
             return false;
         }
 
-        Long tenantId = TenantContext.getTenantId();
+        UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
             throw new IllegalStateException("Cannot save TenantAware entity. Tenant ID is missing in TenantContext.");
         }
@@ -23,7 +24,7 @@ public class TenantInterceptor implements Interceptor {
         return injectTenantId(state, propertyNames, tenantId);
     }
 
-    private boolean injectTenantId(Object[] state, String[] propertyNames, Long tenantId) {
+    private boolean injectTenantId(Object[] state, String[] propertyNames, UUID tenantId) {
         for (int i = 0; i < propertyNames.length; i++) {
             if (TENANT_ID_PROPERTY.equals(propertyNames[i])) {
                 state[i] = tenantId;

@@ -8,21 +8,21 @@ import quantum.futback.core.multitenancy.TenantAware;
 
 import java.util.UUID;
 
-@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = Long.class))
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = UUID.class))
 @Entity
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"tenant_id", "dni"}),
         @UniqueConstraint(columnNames = {"tenant_id", "email"})
 })
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
-public class User implements TenantAware { // <-- Implementa TenantAware
+public class User implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(name = "tenant_id", nullable = false, updatable = false)
-    private Long tenantId; // <-- Campo para el ID del Tenant
+    private UUID tenantId; // CAMBIO AQUÍ
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
@@ -49,7 +49,7 @@ public class User implements TenantAware { // <-- Implementa TenantAware
     public User() {
     }
 
-    public User(UUID id, Long tenantId, Role role, String dni, String email, String passwordHash, String fullName, String phone, Boolean isActive) {
+    public User(UUID id, UUID tenantId, Role role, String dni, String email, String passwordHash, String fullName, String phone, Boolean isActive) {
         this.id = id;
         this.tenantId = tenantId;
         this.role = role;
@@ -68,14 +68,13 @@ public class User implements TenantAware { // <-- Implementa TenantAware
     public void setId(UUID id) {
         this.id = id;
     }
-
     @Override
-    public Long getTenantId() {
+    public UUID getTenantId() {
         return tenantId;
     }
 
     @Override
-    public void setTenantId(Long tenantId) {
+    public void setTenantId(UUID tenantId) {
         this.tenantId = tenantId;
     }
 

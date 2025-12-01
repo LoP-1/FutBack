@@ -41,14 +41,13 @@ public class TenantService {
         tenant.setActive(true);
 
         Tenant savedTenant = tenantRepository.save(tenant);
-
-        Long tenantIdLong = savedTenant.getId().getMostSignificantBits() & Long.MAX_VALUE;
-        TenantContext.setTenantId(1L);
+        UUID newTenantId = savedTenant.getId();
+        TenantContext.setTenantId(newTenantId);
 
         try {
             Role adminRole = new Role();
             adminRole.setName("ADMIN");
-            adminRole.setTenantId(1L); // Placeholder
+            adminRole.setTenantId(newTenantId);
             roleRepository.save(adminRole);
 
             User adminUser = new User();
@@ -59,7 +58,7 @@ public class TenantService {
             adminUser.setPasswordHash(passwordEncoder.encode(request.adminPassword()));
             adminUser.setRole(adminRole);
             adminUser.setActive(true);
-            adminUser.setTenantId(1L); // Placeholder
+            adminUser.setTenantId(newTenantId); // CAMBIO: Usar UUID real
 
             userRepository.save(adminUser);
 
@@ -71,8 +70,11 @@ public class TenantService {
     }
 
     public Tenant getCurrentTenant() {
-        // Implementación real requeriría buscar por el ID almacenado en el token
-        // Como Tenant usa UUID y el contexto Long, aquí habría lógica de búsqueda
+        UUID currentTenantId = TenantContext.getTenantId();
+        if (currentTenantId != null) {
+            return tenantRepository.findById(currentTenantId)
+                    .orElseThrow(() -> new RuntimeException("Tenant not found"));
+        }
         return tenantRepository.findAll().stream().findFirst().orElseThrow();
     }
 
