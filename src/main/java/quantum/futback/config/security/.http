@@ -4,9 +4,10 @@ Content-Type: application/json
 
 {
   "academyName": "Test",
-  "adminFullName": "Prueba Admin ",
+  "adminFullName": "Prueba Admin",
   "adminEmail": "testeo@gmail.com",
   "adminDni": "123123",
   "adminPassword": "123",
   "adminPhone": "123"
 }
+
