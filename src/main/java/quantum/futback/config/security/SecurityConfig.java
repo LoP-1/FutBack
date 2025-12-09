@@ -20,9 +20,11 @@ import quantum.futback.config.security.JwtToken.JwtAuthenticationFilter;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final InternalApiKeyFilter internalApiKeyFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, InternalApiKeyFilter internalApiKeyFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.internalApiKeyFilter = internalApiKeyFilter;
     }
 
     @Bean
@@ -36,9 +38,13 @@ public class SecurityConfig {
                         .requestMatchers("/esta-rico").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/docs/**").permitAll()
                         .requestMatchers("/api/tenants/current").permitAll()
+                        // Note: /api/internal/** is permitAll() from Spring Security's JWT auth perspective
+                        // but is protected by InternalApiKeyFilter which validates API key before reaching controller
                         .requestMatchers("/api/internal/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                // InternalApiKeyFilter runs first to validate API key for internal endpoints
+                .addFilterBefore(internalApiKeyFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

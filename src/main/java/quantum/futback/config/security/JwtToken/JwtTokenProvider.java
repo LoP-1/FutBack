@@ -21,7 +21,7 @@ import java.util.UUID;
 @Service
 public class JwtTokenProvider {
 
-    @Value("${JWT_SECRET}")
+    @Value("${app.jwt.secret}")
     private String jwtSecret;
 
     @Value("${app.jwt.expirationMs}")
