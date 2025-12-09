@@ -50,28 +50,27 @@ class AuthControllerTest {
     private Tenant testTenant;
     private Role testRole;
 
-    private static final UUID TEST_TENANT_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-
     @BeforeEach
     void setUp() {
-        // 1. Simular un Tenant ID en el contexto usando UUID
-        TenantContext.setTenantId(TEST_TENANT_UUID);
-
-        // Create test tenant
+        // Create test tenant first
         testTenant = new Tenant();
         testTenant.setName("Test Tenant");
         testTenant.setActive(true);
         entityManager.persist(testTenant);
+        entityManager.flush();
+
+        // Set the actual tenant ID in context
+        TenantContext.setTenantId(testTenant.getId());
 
         // Testear un rol
         testRole = new Role();
-        testRole.setTenantId(TEST_TENANT_UUID); // CORREGIDO a UUID
+        testRole.setTenantId(testTenant.getId());
         testRole.setName("ROLE_USER");
         entityManager.persist(testRole);
 
         // Testear al usuario
         testUser = new User();
-        testUser.setTenantId(TEST_TENANT_UUID); // CORREGIDO a UUID
+        testUser.setTenantId(testTenant.getId());
         testUser.setRole(testRole);
         testUser.setDni("12345678");
         testUser.setEmail("test@example.com");
@@ -120,7 +119,7 @@ class AuthControllerTest {
 
     @Test
     void accessProtectedEndpoint_WithoutToken_Returns401Or403() throws Exception {
-        mockMvc.perform(get("/api/tenants/current"))
+        mockMvc.perform(get("/api/players"))
                 .andExpect(status().is(anyOf(is(401), is(403))));
     }
 
