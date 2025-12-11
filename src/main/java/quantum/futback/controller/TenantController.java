@@ -1,6 +1,7 @@
 package quantum.futback.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import quantum.futback.entity.Tenant;
 import quantum.futback.services.TenantService;
@@ -23,6 +24,7 @@ public class TenantController {
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Tenant> updateStatus(@PathVariable UUID id, @RequestParam boolean isActive) {
         return ResponseEntity.ok(tenantService.updateTenantStatus(id, isActive));
     }
