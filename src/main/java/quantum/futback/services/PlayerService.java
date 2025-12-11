@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class PlayerService {
@@ -99,16 +98,17 @@ public class PlayerService {
      * Filtros: teamId, name, dni
      */
     public List<Player> getAllPlayers(UUID teamId, String name, String dni) {
-        List<Player> allPlayers = playerRepository.findAll();
+        // Use database-level filtering for better performance
+        boolean hasFilters = teamId != null || (name != null && !name.isEmpty()) || (dni != null && !dni.isEmpty());
         
-        return allPlayers.stream()
-                .filter(player -> teamId == null || (player.getTeam() != null && teamId.equals(player.getTeam().getId())))
-                .filter(player -> name == null || name.isEmpty() || 
-                        (player.getFirstName() != null && player.getFirstName().toLowerCase().contains(name.toLowerCase())) ||
-                        (player.getLastName() != null && player.getLastName().toLowerCase().contains(name.toLowerCase())))
-                .filter(player -> dni == null || dni.isEmpty() || 
-                        (player.getDni() != null && player.getDni().contains(dni)))
-                .collect(Collectors.toList());
+        if (hasFilters) {
+            return playerRepository.findByFilters(
+                    teamId,
+                    (name != null && !name.isEmpty()) ? name : null,
+                    (dni != null && !dni.isEmpty()) ? dni : null
+            );
+        }
+        return playerRepository.findAll();
     }
 
     /**
@@ -146,13 +146,19 @@ public class PlayerService {
             existingPlayer.setJerseyNumber(request.getJerseyNumber());
         }
         if (request.getTeamId() != null) {
-            existingPlayer.setTeam(teamRepository.findById(request.getTeamId()).orElse(null));
+            Team team = teamRepository.findById(request.getTeamId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found"));
+            existingPlayer.setTeam(team);
         }
         if (request.getPositionPrimaryId() != null) {
-            existingPlayer.setPositionPrimary(positionRepository.findById(request.getPositionPrimaryId()).orElse(null));
+            Position position = positionRepository.findById(request.getPositionPrimaryId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary position not found"));
+            existingPlayer.setPositionPrimary(position);
         }
         if (request.getPositionSecondaryId() != null) {
-            existingPlayer.setPositionSecondary(positionRepository.findById(request.getPositionSecondaryId()).orElse(null));
+            Position position = positionRepository.findById(request.getPositionSecondaryId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Secondary position not found"));
+            existingPlayer.setPositionSecondary(position);
         }
         
         // Handle photo upload
