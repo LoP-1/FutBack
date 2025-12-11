@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PlayerService {
@@ -95,10 +96,19 @@ public class PlayerService {
 
     /**
      * GET /api/players
+     * Filtros: teamId, name, dni
      */
-    public List<Player> getAllPlayers() {
-        // Podrías añadir lógica de filtrado por nombre/DNI aquí si el controlador la pide
-        return playerRepository.findAll();
+    public List<Player> getAllPlayers(UUID teamId, String name, String dni) {
+        List<Player> allPlayers = playerRepository.findAll();
+        
+        return allPlayers.stream()
+                .filter(player -> teamId == null || (player.getTeam() != null && teamId.equals(player.getTeam().getId())))
+                .filter(player -> name == null || name.isEmpty() || 
+                        (player.getFirstName() != null && player.getFirstName().toLowerCase().contains(name.toLowerCase())) ||
+                        (player.getLastName() != null && player.getLastName().toLowerCase().contains(name.toLowerCase())))
+                .filter(player -> dni == null || dni.isEmpty() || 
+                        (player.getDni() != null && player.getDni().contains(dni)))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -116,10 +126,40 @@ public class PlayerService {
     public Player updatePlayer(UUID id, PlayerRequest request) {
         Player existingPlayer = getPlayerById(id);
 
-        // La lógica de actualización es similar a la de creación, pero sin crear un nuevo objeto.
-        // Las validaciones de edad/padre deberían aplicarse si cambia la fecha de nacimiento.
-
-        // ... (Implementar lógica de mapeo de request a existingPlayer)
+        // Update fields from request
+        if (request.getFirstName() != null) {
+            existingPlayer.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            existingPlayer.setLastName(request.getLastName());
+        }
+        if (request.getBirthDate() != null) {
+            existingPlayer.setBirthDate(request.getBirthDate());
+        }
+        if (request.getDni() != null) {
+            existingPlayer.setDni(request.getDni());
+        }
+        if (request.getDominantFoot() != null) {
+            existingPlayer.setDominantFoot(request.getDominantFoot());
+        }
+        if (request.getJerseyNumber() != null) {
+            existingPlayer.setJerseyNumber(request.getJerseyNumber());
+        }
+        if (request.getTeamId() != null) {
+            existingPlayer.setTeam(teamRepository.findById(request.getTeamId()).orElse(null));
+        }
+        if (request.getPositionPrimaryId() != null) {
+            existingPlayer.setPositionPrimary(positionRepository.findById(request.getPositionPrimaryId()).orElse(null));
+        }
+        if (request.getPositionSecondaryId() != null) {
+            existingPlayer.setPositionSecondary(positionRepository.findById(request.getPositionSecondaryId()).orElse(null));
+        }
+        
+        // Handle photo upload
+        if (request.getPhotoFile() != null && !request.getPhotoFile().isEmpty()) {
+            String photoUrl = imagenService.uploadImage(request.getPhotoFile());
+            existingPlayer.setPhotoUrl(photoUrl);
+        }
 
         return playerRepository.save(existingPlayer);
     }

@@ -91,7 +91,7 @@ class AuthControllerTest {
     @Test
     void login_WithValidCredentials_ReturnsAccessTokenAndRefreshToken() throws Exception {
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
+        loginRequest.setDni("12345678");
         loginRequest.setPassword("password123");
 
         mockMvc.perform(post("/api/auth/login")
@@ -108,7 +108,7 @@ class AuthControllerTest {
     @Test
     void login_WithInvalidCredentials_ReturnsUnauthorizedOrForbidden() throws Exception {
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
+        loginRequest.setDni("12345678");
         loginRequest.setPassword("wrongpassword");
 
         mockMvc.perform(post("/api/auth/login")
@@ -127,7 +127,7 @@ class AuthControllerTest {
     void refreshToken_WithValidToken_ReturnsNewTokens() throws Exception {
         // First, login to get tokens
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
+        loginRequest.setDni("12345678");
         loginRequest.setPassword("password123");
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
@@ -154,7 +154,7 @@ class AuthControllerTest {
     void logout_WithValidToken_InvalidatesToken() throws Exception {
         // First, login to get tokens
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
+        loginRequest.setDni("12345678");
         loginRequest.setPassword("password123");
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
@@ -185,7 +185,7 @@ class AuthControllerTest {
     void accessProtectedEndpoint_WithValidToken_ReturnsSuccess() throws Exception {
         // First, login to get tokens
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
+        loginRequest.setDni("12345678");
         loginRequest.setPassword("password123");
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
