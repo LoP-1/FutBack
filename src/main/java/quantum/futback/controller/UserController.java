@@ -55,7 +55,7 @@ public class UserController {
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<User> updateStatus(@PathVariable UUID id, @RequestBody StatusUpdateRequest request) {
-        return ResponseEntity.ok(userService.updateUserStatus(id, request.getIsActive() != null && request.getIsActive()));
+        return ResponseEntity.ok(userService.updateUserStatus(id, Boolean.TRUE.equals(request.getIsActive())));
     }
 
     @GetMapping("/me")

@@ -84,7 +84,7 @@ public class UserServiceImpl implements UserService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());
         user.setPhone(request.getPhone());
-        user.setActive(request.getIsActive() == null || request.getIsActive());
+        user.setActive(Optional.ofNullable(request.getIsActive()).orElse(true));
 
         return userRepository.save(user);
     }
@@ -122,12 +122,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> listUsers(UUID roleId, String dni) {
-        List<User> users = userRepository.findAll();
+        if (dni != null) {
+            return userRepository.findByDni(dni)
+                    .filter(u -> roleId == null || (u.getRole() != null && roleId.equals(u.getRole().getId())))
+                    .map(List::of)
+                    .orElseGet(List::of);
+        }
 
-        return users.stream()
-                .filter(u -> roleId == null || (u.getRole() != null && roleId.equals(u.getRole().getId())))
-                .filter(u -> dni == null || dni.equalsIgnoreCase(u.getDni()))
-                .toList();
+        if (roleId != null) {
+            return userRepository.findByRoleId(roleId);
+        }
+
+        return userRepository.findAll();
     }
 
     @Override
