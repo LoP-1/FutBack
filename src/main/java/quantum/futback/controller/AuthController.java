@@ -10,13 +10,21 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import quantum.futback.config.security.JwtToken.JwtTokenProvider;
 import quantum.futback.config.security.JwtToken.UserPrincipal;
+import quantum.futback.entity.DTO.ForgotPasswordRequest;
 import quantum.futback.entity.DTO.JwtResponse;
 import quantum.futback.entity.DTO.LoginRequest;
 import quantum.futback.entity.DTO.RefreshTokenRequest;
+import quantum.futback.entity.DTO.ResetPasswordRequest;
+import quantum.futback.entity.PasswordResetToken;
 import quantum.futback.entity.RefreshToken;
 import quantum.futback.entity.User;
+import quantum.futback.repository.PasswordResetTokenRepository;
+import quantum.futback.repository.UserRepository;
 import quantum.futback.services.interfaces.UserService;
 
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.time.Instant;
 import java.util.Optional;
 
 
@@ -27,11 +35,24 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
     private final UserService userService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final UserRepository userRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final SecureRandom secureRandom = new SecureRandom();
+    private static final long RESET_TOKEN_EXPIRY_SECONDS = 3600;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider, UserService userService) {
+    public AuthController(AuthenticationManager authenticationManager,
+                          JwtTokenProvider tokenProvider,
+                          UserService userService,
+                          PasswordResetTokenRepository passwordResetTokenRepository,
+                          UserRepository userRepository,
+                          org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userService = userService;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
@@ -100,6 +121,52 @@ public class AuthController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token inválido o expirado.");
         }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        Optional<User> userOpt = userService.findByEmail(request.getEmail());
+
+        if (userOpt.isPresent()) {
+            String token = generateSecureToken();
+
+            PasswordResetToken resetToken = new PasswordResetToken();
+            resetToken.setUser(userOpt.get());
+            resetToken.setToken(token);
+            resetToken.setExpiryDate(Instant.now().plusSeconds(RESET_TOKEN_EXPIRY_SECONDS));
+            passwordResetTokenRepository.save(resetToken);
+        }
+
+        return ResponseEntity.ok(java.util.Map.of("message", "Si el correo existe, se enviará un enlace de recuperación."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository.findByToken(request.getToken());
+
+        if (tokenOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token inválido");
+        }
+
+        PasswordResetToken token = tokenOpt.get();
+        if (Boolean.TRUE.equals(token.getUsed()) || token.getExpiryDate().isBefore(Instant.now())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token expirado o ya utilizado");
+        }
+
+        User user = token.getUser();
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        token.setUsed(true);
+        passwordResetTokenRepository.save(token);
+
+        return ResponseEntity.ok("Contraseña actualizada correctamente");
+    }
+
+    private String generateSecureToken() {
+        byte[] bytes = new byte[32];
+        secureRandom.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
 
