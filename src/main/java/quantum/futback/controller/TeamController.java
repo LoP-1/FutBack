@@ -2,9 +2,11 @@ package quantum.futback.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import quantum.futback.entity.Team;
 import quantum.futback.entity.DTO.TeamRequest;
+import quantum.futback.entity.DTO.StatusUpdateRequest;
 import quantum.futback.services.TeamService;
 
 import java.util.List;
@@ -21,10 +23,8 @@ public class TeamController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
     public ResponseEntity<Team> createTeam(@RequestBody TeamRequest request) {
-        // En una implementación real, mapearías el DTO a la entidad Team.
-        // Aquí, por simplicidad, asumimos que el servicio puede manejar el DTO o que mapeamos aquí.
-        // Ejemplo de mapeo básico:
         Team newTeam = new Team();
         newTeam.setName(request.getName());
         newTeam.setCategory(request.getCategory());
@@ -36,10 +36,14 @@ public class TeamController {
 
     /**
      * GET /api/teams: Obtiene todos los equipos del tenant actual.
+     * Filtros: ?category={cat}&isActive={bool}
      */
     @GetMapping
-    public ResponseEntity<List<Team>> getAllTeams() {
-        List<Team> teams = teamService.getAllTeams();
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
+    public ResponseEntity<List<Team>> getAllTeams(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean isActive) {
+        List<Team> teams = teamService.getAllTeams(category, isActive);
         return ResponseEntity.ok(teams);
     }
 
@@ -47,6 +51,7 @@ public class TeamController {
      * GET /api/teams/{id}: Obtiene un equipo por ID.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
     public ResponseEntity<Team> getTeamById(@PathVariable UUID id) {
         Team team = teamService.getTeamById(id);
         return ResponseEntity.ok(team);
@@ -56,8 +61,8 @@ public class TeamController {
      * PUT /api/teams/{id}: Actualiza los datos de un equipo.
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
     public ResponseEntity<Team> updateTeam(@PathVariable UUID id, @RequestBody TeamRequest request) {
-        // Mapeo básico:
         Team updatedTeamDetails = new Team();
         updatedTeamDetails.setName(request.getName());
         updatedTeamDetails.setCategory(request.getCategory());
@@ -71,8 +76,9 @@ public class TeamController {
      * PUT /api/teams/{id}/status: Actualiza el estado de actividad del equipo.
      */
     @PutMapping("/{id}/status")
-    public ResponseEntity<Team> updateTeamStatus(@PathVariable UUID id, @RequestParam boolean isActive) {
-        Team team = teamService.updateTeamStatus(id, isActive);
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
+    public ResponseEntity<Team> updateTeamStatus(@PathVariable UUID id, @RequestBody StatusUpdateRequest request) {
+        Team team = teamService.updateTeamStatus(id, Boolean.TRUE.equals(request.getIsActive()));
         return ResponseEntity.ok(team);
     }
 }

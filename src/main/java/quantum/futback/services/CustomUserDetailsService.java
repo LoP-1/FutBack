@@ -31,9 +31,9 @@ public class CustomUserDetailsService implements UserDetailsService {
             user = userRepository.findById(userId)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + usernameOrId));
         } catch (IllegalArgumentException e) {
-            // If not a UUID, treat as email (for login)
-            user = userRepository.findByEmail(usernameOrId)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + usernameOrId));
+            // If not a UUID, treat as DNI (for login)
+            user = userRepository.findByDni(usernameOrId)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with dni: " + usernameOrId));
         }
 
         return UserPrincipal.create(user);

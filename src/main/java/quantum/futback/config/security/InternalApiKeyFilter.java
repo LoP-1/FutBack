@@ -15,7 +15,7 @@ import java.security.MessageDigest;
 @Component
 public class InternalApiKeyFilter extends OncePerRequestFilter {
 
-    private static final String API_KEY_HEADER = "";
+    private static final String API_KEY_HEADER = "X-Internal-Api-Key";
 
     @Value("${app.internal.api-key:}")
     private String internalApiKey;

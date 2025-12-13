@@ -95,9 +95,19 @@ public class PlayerService {
 
     /**
      * GET /api/players
+     * Filtros: teamId, name, dni
      */
-    public List<Player> getAllPlayers() {
-        // Podrías añadir lógica de filtrado por nombre/DNI aquí si el controlador la pide
+    public List<Player> getAllPlayers(UUID teamId, String name, String dni) {
+        // Use database-level filtering for better performance
+        boolean hasFilters = teamId != null || (name != null && !name.isEmpty()) || (dni != null && !dni.isEmpty());
+        
+        if (hasFilters) {
+            return playerRepository.findByFilters(
+                    teamId,
+                    (name != null && !name.isEmpty()) ? name : null,
+                    (dni != null && !dni.isEmpty()) ? dni : null
+            );
+        }
         return playerRepository.findAll();
     }
 
@@ -116,10 +126,46 @@ public class PlayerService {
     public Player updatePlayer(UUID id, PlayerRequest request) {
         Player existingPlayer = getPlayerById(id);
 
-        // La lógica de actualización es similar a la de creación, pero sin crear un nuevo objeto.
-        // Las validaciones de edad/padre deberían aplicarse si cambia la fecha de nacimiento.
-
-        // ... (Implementar lógica de mapeo de request a existingPlayer)
+        // Update fields from request
+        if (request.getFirstName() != null) {
+            existingPlayer.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            existingPlayer.setLastName(request.getLastName());
+        }
+        if (request.getBirthDate() != null) {
+            existingPlayer.setBirthDate(request.getBirthDate());
+        }
+        if (request.getDni() != null) {
+            existingPlayer.setDni(request.getDni());
+        }
+        if (request.getDominantFoot() != null) {
+            existingPlayer.setDominantFoot(request.getDominantFoot());
+        }
+        if (request.getJerseyNumber() != null) {
+            existingPlayer.setJerseyNumber(request.getJerseyNumber());
+        }
+        if (request.getTeamId() != null) {
+            Team team = teamRepository.findById(request.getTeamId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found"));
+            existingPlayer.setTeam(team);
+        }
+        if (request.getPositionPrimaryId() != null) {
+            Position position = positionRepository.findById(request.getPositionPrimaryId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary position not found"));
+            existingPlayer.setPositionPrimary(position);
+        }
+        if (request.getPositionSecondaryId() != null) {
+            Position position = positionRepository.findById(request.getPositionSecondaryId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Secondary position not found"));
+            existingPlayer.setPositionSecondary(position);
+        }
+        
+        // Handle photo upload
+        if (request.getPhotoFile() != null && !request.getPhotoFile().isEmpty()) {
+            String photoUrl = imagenService.uploadImage(request.getPhotoFile());
+            existingPlayer.setPhotoUrl(photoUrl);
+        }
 
         return playerRepository.save(existingPlayer);
     }

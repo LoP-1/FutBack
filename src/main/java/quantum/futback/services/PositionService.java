@@ -29,7 +29,10 @@ public class PositionService {
         return positionRepository.save(position);
     }
 
-    public List<Position> getAllPositions() {
+    public List<Position> getAllPositions(String area) {
+        if (area != null && !area.isEmpty()) {
+            return positionRepository.findByArea(area);
+        }
         return positionRepository.findAll();
     }
 

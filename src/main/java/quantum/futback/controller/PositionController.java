@@ -2,6 +2,7 @@ package quantum.futback.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import quantum.futback.entity.DTO.PositionRequest;
 import quantum.futback.entity.Position;
@@ -24,8 +25,8 @@ public class PositionController {
      * POST /api/positions: Crea una nueva posición.
      */
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
     public ResponseEntity<Position> createPosition(@RequestBody PositionRequest request) {
-        // Mapeo básico:
         Position newPosition = new Position();
         newPosition.setName(request.getName());
         newPosition.setAbbreviation(request.getAbbreviation());
@@ -37,10 +38,12 @@ public class PositionController {
 
     /**
      * GET /api/positions: Obtiene todas las posiciones del tenant actual.
+     * Filtros: ?area={Defensa|Mediocampo|Ataque|...}
      */
     @GetMapping
-    public ResponseEntity<List<Position>> getAllPositions() {
-        List<Position> positions = positionService.getAllPositions();
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
+    public ResponseEntity<List<Position>> getAllPositions(@RequestParam(required = false) String area) {
+        List<Position> positions = positionService.getAllPositions(area);
         return ResponseEntity.ok(positions);
     }
 
@@ -48,6 +51,7 @@ public class PositionController {
      * GET /api/positions/{id}: Obtiene una posición por ID.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
     public ResponseEntity<Position> getPositionById(@PathVariable UUID id) {
         Position position = positionService.getPositionById(id);
         return ResponseEntity.ok(position);
@@ -57,8 +61,8 @@ public class PositionController {
      * PUT /api/positions/{id}: Actualiza los datos de una posición.
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
     public ResponseEntity<Position> updatePosition(@PathVariable UUID id, @RequestBody PositionRequest request) {
-        // Mapeo básico:
         Position updatedPositionDetails = new Position();
         updatedPositionDetails.setName(request.getName());
         updatedPositionDetails.setAbbreviation(request.getAbbreviation());
@@ -73,6 +77,7 @@ public class PositionController {
      * La validación de borrado se maneja en PositionService y devuelve 409 CONFLICT si falla.
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COACH')")
     public ResponseEntity<Void> deletePosition(@PathVariable UUID id) {
         positionService.deletePosition(id);
         return ResponseEntity.noContent().build();

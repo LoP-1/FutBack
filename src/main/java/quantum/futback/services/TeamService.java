@@ -33,7 +33,14 @@ public class TeamService {
         return teamRepository.save(team);
     }
 
-    public List<Team> getAllTeams() {
+    public List<Team> getAllTeams(String category, Boolean isActive) {
+        if (category != null && isActive != null) {
+            return teamRepository.findByCategoryAndIsActive(category, isActive);
+        } else if (category != null) {
+            return teamRepository.findByCategory(category);
+        } else if (isActive != null) {
+            return teamRepository.findByIsActive(isActive);
+        }
         return teamRepository.findAll();
     }
 
